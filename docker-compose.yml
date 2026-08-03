@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build:
@@ -36,6 +34,20 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: event_manager_migrate
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/event_manager
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: uv run alembic upgrade head
 
 volumes:
   postgres_data:
