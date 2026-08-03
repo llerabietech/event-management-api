@@ -1,31 +1,27 @@
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, AsyncGenerator, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from core.config import settings
 
 
-# Создаем асинхронный движок
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=False,              
-    pool_size=20,           
-    max_overflow=10,
+    echo=settings.DEBUG,
+    pool_size=settings.DB_POOL_SIZE,
+    max_overflow=settings.DB_MAX_OVERFLOW,
 )
 
-# Фабрика сессий
 async_session = async_sessionmaker(
     engine,
     class_=AsyncSession,
-    expire_on_commit=False, 
+    expire_on_commit=False,
 )
+
 
 class Base(DeclarativeBase):
     pass
 
-async def get_db() -> AsyncSession:
-    """
-    Передает сессию БД в роутер.
-    Автоматически закрывает сессию после запроса.
-    """
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with async_session() as session:
         try:
             yield session
