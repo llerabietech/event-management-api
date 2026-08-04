@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from dependencies.event import get_user_service
-from services.user_service import UserService
+from fastapi import APIRouter, Depends, status
+
+from dependencies.user import get_user_service
 from schemas.users import UserCreate, UserResponse, UserUpdate
+from services.user_service import UserService
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -56,6 +56,6 @@ async def update_user(
     return updated_user
 
 @router.delete("/{user_id}")
-async def delete_event(user_id: int, service: UserService = Depends(get_user_service)):
+async def delete_event(user_id: int, service: UserService = Depends(get_user_service), summary="Удалить пользователя"):
     await service.delete_user(user_id=user_id)
     return {"message": "OK"}
