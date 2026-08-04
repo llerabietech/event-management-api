@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import HTTPException, status
 
-from schemas.users import UserCreate, UserResponse, UserUpdate
+from schemas.users import UserCreate, UserUpdate
 
 
 class UserService:

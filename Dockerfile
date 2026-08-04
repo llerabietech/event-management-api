@@ -1,44 +1,55 @@
 # Dockerfile
 
-# === Базовый образ с Python 3.12 (slim — меньше размер) ===
-FROM python:3.12-slim
+# === Stage 1: Сборка зависимостей ===
+FROM python:3.12-slim AS builder
 
-# === Системные переменные ===
-# Отключаем создание .pyc файлов (экономим место)
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1
+# Устанавливаем build-зависимости
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libffi-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# === Рабочая директория внутри контейнера ===
-WORKDIR /app
+# Устанавливаем Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal
+ENV PATH="/root/.cargo/bin:${PATH}"
 
-# === Устанавливаем uv (современный менеджер пакетов) ===
+WORKDIR /build
+
+# Устанавливаем uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# === Копируем ТОЛЬКО файлы зависимостей (для кэша Docker) ===
-# Это важный трюк: если код не менялся, Docker не будет переустанавливать пакеты
+# Копируем зависимости
 COPY pyproject.toml uv.lock ./
 
-# === Устанавливаем зависимости (без самого проекта — для кэша) ===
+# Устанавливаем зависимости (здесь компилируется bcrypt)
 RUN uv sync --frozen --no-dev --no-install-project
 
-# === Теперь копируем весь проект ===
+# Копируем проект
 COPY . .
-
-# === Устанавливаем сам проект ===
 RUN uv sync --frozen --no-dev
 
-# === Создаем non-root пользователя (безопасность!) ===
+
+# === Stage 2: Финальный образ (без build-инструментов) ===
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH="/app/.venv/bin:$PATH"
+
+WORKDIR /app
+
+# Копируем ТОЛЬКО готовое виртуальное окружение из builder
+COPY --from=builder /build/.venv /app/.venv
+COPY --from=builder /build/app /app/app
+COPY --from=builder /build/alembic /app/alembic
+COPY --from=builder /build/alembic.ini /app/alembic.ini
+
+# Non-root пользователь
 RUN adduser --disabled-password --gecos "" appuser && \
     chown -R appuser:appuser /app
 USER appuser
 
-# === Порт, который слушает приложение ===
 EXPOSE 8000
 
-# === Healthcheck (Docker будет проверять, что приложение живо) ===
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')" || exit 1
-
-# === Команда запуска ===
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
