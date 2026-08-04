@@ -1,11 +1,11 @@
 from fastapi import FastAPI
+
 from app.api import router
 
-app = FastAPI(title="Event Manager",
-    description="",
-    version="1.0.0")
+app = FastAPI(title="Event Manager", description="", version="1.0.0")
 
 app.include_router(router.api_router, prefix="/api/v1")
+
 
 @app.get("/")
 def root():
