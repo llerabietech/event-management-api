@@ -1,15 +1,28 @@
-from pydantic import BaseModel, Field, EmailStr
+from datetime import datetime
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from models.users import UserRole
 
-class User(BaseModel):
-    email: EmailStr = Field(
-        description="Email для пользователя",
-    )
-    first_name: str = Field(
-        description="Имя пользователя"
-    )
-    last_name: str = Field(
-        description="Фамилия пользователя"
-    )
-    role: list[str] = Field(
-        description="Роль пользователя"
-    )
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+    first_name: str = Field(..., min_length=1, max_length=100)
+    last_name: str = Field(..., min_length=1, max_length=100)
+    role: UserRole = Field(default=UserRole.USER)
+
+class UserUpdate(BaseModel):
+    email: EmailStr | None = None
+    password: str | None = Field(default=None, min_length=8)
+    first_name: str | None = Field(default=None, min_length=1, max_length=100)
+    last_name: str | None = Field(default=None, min_length=1, max_length=100)
+    role: UserRole | None = None
+
+class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int
+    email: EmailStr
+    first_name: str
+    last_name: str
+    role: UserRole
+    created_at: datetime
+    updated_at: datetime
