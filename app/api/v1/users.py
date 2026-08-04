@@ -14,7 +14,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
     summary="Регистрация нового пользователя",
 )
 async def create_user(
-    user_data: UserCreate, service: UserService = Depends(get_user_service)
+    user_data: UserCreate, service: UserService = Depends(get_user_service)  # noqa: B008
 ):
     user = await service.create_user(user_data)
     return user
@@ -26,7 +26,7 @@ async def create_user(
 async def list_users(
     skip: int = 0,
     limit: int = 100,
-    service: UserService = Depends(get_user_service),
+    service: UserService = Depends(get_user_service),  # noqa: B008
 ):
     users = await service.get_users(skip=skip, limit=limit)
     return users
@@ -37,7 +37,7 @@ async def list_users(
 )
 async def get_user(
     user_id: int,
-    service: UserService = Depends(get_user_service),
+    service: UserService = Depends(get_user_service),  # noqa: B008
 ):
     user = await service.get_user(user_id)
     return user
@@ -50,12 +50,12 @@ async def get_user(
 async def update_user(
     user_id: int,
     user_data: UserUpdate,
-    service:  UserService = Depends(get_user_service),
+    service:  UserService = Depends(get_user_service),  # noqa: B008
 ):
     updated_user = await service.update_user(user_id, user_data)
     return updated_user
 
 @router.delete("/{user_id}")
-async def delete_event(user_id: int, service: UserService = Depends(get_user_service), summary="Удалить пользователя"):
+async def delete_event(user_id: int, service: UserService = Depends(get_user_service), summary="Удалить пользователя"):  # noqa: B008
     await service.delete_user(user_id=user_id)
     return {"message": "OK"}
