@@ -1,55 +1,41 @@
-# Dockerfile
+FROM python:3.12-slim
 
-# === Stage 1: Сборка зависимостей ===
-FROM python:3.12-slim AS builder
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
-# Устанавливаем build-зависимости
+WORKDIR /app
+
+# 1. Системные зависимости для компиляции bcrypt
 RUN apt-get update && apt-get install -y \
     gcc \
     libffi-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Устанавливаем Rust
+# 2. Устанавливаем Rust (нужен для bcrypt >= 4.1)
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-WORKDIR /build
-
-# Устанавливаем uv
+# 3. Устанавливаем uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Копируем зависимости
+# 4. Копируем ТОЛЬКО файлы зависимостей (для кэширования)
 COPY pyproject.toml uv.lock ./
 
-# Устанавливаем зависимости (здесь компилируется bcrypt)
-RUN uv sync --frozen --no-dev --no-install-project
-
-# Копируем проект
-COPY . .
+# 5. Устанавливаем зависимости (здесь создается ПРАВИЛЬНЫЙ .venv)
 RUN uv sync --frozen --no-dev
 
+# 6. Копируем весь проект (.dockerignore не даст скопировать локальный .venv!)
+COPY . .
 
-# === Stage 2: Финальный образ (без build-инструментов) ===
-FROM python:3.12-slim
+# 7. Синхронизируем еще раз, чтобы установить сам проект
+RUN uv sync --frozen --no-dev
 
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PATH="/app/.venv/bin:$PATH"
-
-WORKDIR /app
-
-# Копируем ТОЛЬКО готовое виртуальное окружение из builder
-COPY --from=builder /build/.venv /app/.venv
-COPY --from=builder /build/app /app/app
-COPY --from=builder /build/alembic /app/alembic
-COPY --from=builder /build/alembic.ini /app/alembic.ini
-
-# Non-root пользователь
-RUN adduser --disabled-password --gecos "" appuser && \
-    chown -R appuser:appuser /app
+# 8. Создаем non-root пользователя
+RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# 9. Явно используем uv run для гарантии правильного окружения
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
