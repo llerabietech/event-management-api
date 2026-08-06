@@ -16,6 +16,7 @@ services:
         condition: service_healthy
     volumes:
       - .:/app
+      - app_venv:/app/.venv 
     command: uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   postgres:
@@ -50,4 +51,5 @@ services:
     command: uv run alembic upgrade head
 
 volumes:
-  postgres_data:
+  postgres_data:  
+  app_venv:  
