@@ -1,5 +1,7 @@
 from fastapi import HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 
+from core.security import verify_token
 from repositories.user_repository import UserRepository
 from schemas.users import UserCreate, UserUpdate
 
@@ -63,3 +65,31 @@ class UserService:
         # Удаляем пользователя
         await self.repository.delete(user_id)
         return {"message": "OK"}
+
+    async def get_current_user(self):
+        token = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+        """Извлекает пользователя из JWT токена"""
+        credentials_exception = HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+        payload = verify_token(token)
+        if payload is None:
+            raise credentials_exception
+
+        user_id_str = payload.get("sub")
+        if user_id_str is None:
+            raise credentials_exception
+
+        try:
+            user_id = int(user_id_str)
+        except ValueError:
+            raise credentials_exception
+
+        user = await self.get_user(user_id)
+        if user is None:
+            raise credentials_exception
+
+        return user
