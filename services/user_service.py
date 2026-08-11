@@ -1,7 +1,7 @@
+from app.core.security import verify_token
 from fastapi import HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from app.core.security import verify_token
 from repositories.user_repository import UserRepository
 from schemas.users import UserCreate, UserUpdate
 
