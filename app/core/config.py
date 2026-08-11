@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     DB_POOL_SIZE: int = Field(default=20, description="Размер пула соединений")
     DB_MAX_OVERFLOW: int = Field(default=10, description="Максимальное переполнение пула")
     
+     # === Безопасность ===
+    SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    REFRESH_TOKEN_EXPIRE_DAYS: int
     
     # Настройки чтения .env файла
     model_config = SettingsConfigDict(
