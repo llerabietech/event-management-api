@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from app.exceptions import EventAlreadyStartsError, EventNotFoundError
-from repositories.event_repository import EventRepository
-from schemas.events import EventCreate, EventUpdate
+from app.repositories.event_repository import EventRepository
+from app.schemas.events import EventCreate, EventUpdate
 
 
 class EventService:

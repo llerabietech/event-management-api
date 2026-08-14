@@ -11,7 +11,8 @@ from alembic import context
 from app.core.config import settings
 from app.core.database import Base
 
-from models import users, events
+from app.models import events
+from app.models import users
 
 # Конфигурация Alembic
 config = context.config

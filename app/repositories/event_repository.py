@@ -1,8 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession 
 
-from models.events import Event
-from schemas.events import EventCreate, EventUpdate
+from app.models.events import Event
+from app.schemas.events import EventCreate, EventUpdate
 
 
 class EventRepository:

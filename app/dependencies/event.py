@@ -3,9 +3,9 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dependencies import get_db
-from repositories.event_repository import EventRepository
-from services.event_service import EventService
+from app.dependencies import get_db
+from app.repositories.event_repository import EventRepository
+from app.services.event_service import EventService
 
 
 def get_event_repository(session: AsyncSession = Depends(get_db)) -> EventRepository:  # noqa: B008

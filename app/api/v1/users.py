@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from dependencies.user import UserServiceDep
-from schemas.users import UserResponse, UserUpdate
+from app.dependencies.user import UserServiceDep
+from app.schemas.users import UserResponse, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["Users"])
 

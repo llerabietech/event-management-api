@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status
 
-from dependencies.event import EventServiceDep
-from schemas.events import EventCreate, EventResponse, EventUpdate
+from app.dependencies.event import EventServiceDep
+from app.schemas.events import EventCreate, EventResponse, EventUpdate
 
 router = APIRouter(prefix="/events", tags=["Events"])
 

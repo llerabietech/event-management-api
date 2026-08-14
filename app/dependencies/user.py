@@ -3,9 +3,9 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dependencies import get_db
-from repositories.user_repository import UserRepository
-from services.user_service import UserService
+from app.dependencies import get_db
+from app.repositories.user_repository import UserRepository
+from app.services.user_service import UserService
 
 
 def get_user_repository(session: AsyncSession = Depends(get_db)) -> UserRepository:  # noqa: B008

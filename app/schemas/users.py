@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-from models.users import UserRole
+from app.models.users import UserRole
 
 
 class UserCreate(BaseModel):

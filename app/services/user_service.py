@@ -3,8 +3,8 @@ from fastapi.security import OAuth2PasswordBearer
 
 from app.core.security import verify_token
 from app.exceptions import UserAlreadyExistsError, UserNotFoundError
-from repositories.user_repository import UserRepository
-from schemas.users import UserCreate, UserUpdate
+from app.repositories.user_repository import UserRepository
+from app.schemas.users import UserCreate, UserUpdate
 
 
 class UserService:
