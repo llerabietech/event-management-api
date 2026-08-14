@@ -20,13 +20,13 @@ class EventService:
     async def get_event(self, event_id: int):
         event = await self.repository.get_event_by_id(event_id)
         if not event:
-            raise EventNotFoundError()
+            raise EventNotFoundError(event_id)
         return event
 
     async def update_event(self, event_id: int, event_data: EventUpdate):
         event = await self.repository.get_event_by_id(event_id)
         if not event:
-            raise EventNotFoundError()
+            raise EventNotFoundError(event_id)
 
         updated_event = await self.repository.update(event_id, event_data)
         return updated_event
@@ -34,10 +34,10 @@ class EventService:
     async def delete_event(self, event_id: int):
         event = await self.repository.get_event_by_id(event_id)
         if not event:
-            raise EventNotFoundError()
+            raise EventNotFoundError(event_id)
 
         if event.start_time <= datetime.utcnow():  # noqa: DTZ003
-            raise EventAlreadyStartsError()
+            raise EventAlreadyStartsError(event_id)
 
         await self.repository.delete(event)
         # TODO: redis

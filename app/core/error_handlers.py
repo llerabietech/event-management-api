@@ -5,14 +5,14 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.exceptions.base import AppError
+from app.exceptions import AppException
 
 logger = logging.getLogger(__name__)
 
 
 def register_error_handlers(app: FastAPI) -> None:
-    @app.exception_handler(AppError)
-    async def app_error_handler(request: Request, exc: AppError):
+    @app.exception_handler(AppException)
+    async def app_error_handler(request: Request, exc: AppException):
         return JSONResponse(
             status_code=exc.status_code,
             content={

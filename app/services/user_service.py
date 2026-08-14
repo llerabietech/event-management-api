@@ -14,7 +14,7 @@ class UserService:
     async def create_user(self, user_data: UserCreate):
         user = await self.repository.get_by_email(user_data.email)
         if user:
-            raise UserAlreadyExistsError()
+            raise UserAlreadyExistsError(user_data.email)
 
         user = await self.repository.create(user_data)
 
@@ -27,20 +27,20 @@ class UserService:
     async def get_user(self, user_id: int):
         user = await self.repository.get_user_by_id(user_id)
         if not user:
-            raise UserNotFoundError()
+            raise UserNotFoundError(user_id)
         return user
 
     async def update_user(self, user_id: int, user_data: UserUpdate):
         # Проверяем, существует ли пользователь
         user = await self.repository.get_user_by_id(user_id)
         if not user:
-            raise UserNotFoundError()
+            raise UserNotFoundError(user_id)
 
         # Если обновляется email, проверяем уникальность
         if user_data.email and user_data.email != user.email:
             existing = await self.repository.get_by_email(user_data.email)
             if existing:
-                raise UserAlreadyExistsError()
+                raise UserAlreadyExistsError(user_data.email)
 
         updated_user = await self.repository.update(user_id, user_data)
         return updated_user
@@ -49,7 +49,7 @@ class UserService:
         # Проверяем, существует ли пользователь
         user = await self.repository.get_user_by_id(user_id)
         if not user:
-            raise UserNotFoundError()
+            raise UserNotFoundError(user_id)
         # Удаляем пользователя
         await self.repository.delete(user_id)
         return {"message": "OK"}

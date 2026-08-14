@@ -6,6 +6,7 @@ class AppError(Exception):
     def __init__(self, message: str | None = None):
         if message is not None:
             self.message = message
+        super().__init__(self.message)
 
 
 class AppException(Exception):
@@ -16,6 +17,7 @@ class AppException(Exception):
     def __init__(self, message: str | None = None):
         if message is not None:
             self.message = message
+        super().__init__(self.message)
 
 
 class NotFoundError(AppException):
