@@ -2,6 +2,7 @@ from fastapi import HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 from app.core.security import verify_token
+from app.exceptions import UserAlreadyExistsError, UserNotFoundError
 from repositories.user_repository import UserRepository
 from schemas.users import UserCreate, UserUpdate
 
@@ -13,10 +14,7 @@ class UserService:
     async def create_user(self, user_data: UserCreate):
         user = await self.repository.get_by_email(user_data.email)
         if user:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User with this email already exists",
-            )
+            raise UserAlreadyExistsError()
 
         user = await self.repository.create(user_data)
 
@@ -29,27 +27,20 @@ class UserService:
     async def get_user(self, user_id: int):
         user = await self.repository.get_user_by_id(user_id)
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
+            raise UserNotFoundError()
         return user
 
     async def update_user(self, user_id: int, user_data: UserUpdate):
         # Проверяем, существует ли пользователь
         user = await self.repository.get_user_by_id(user_id)
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
+            raise UserNotFoundError()
 
         # Если обновляется email, проверяем уникальность
         if user_data.email and user_data.email != user.email:
             existing = await self.repository.get_by_email(user_data.email)
             if existing:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Email already in use",
-                )
+                raise UserAlreadyExistsError()
 
         updated_user = await self.repository.update(user_id, user_data)
         return updated_user
@@ -58,10 +49,7 @@ class UserService:
         # Проверяем, существует ли пользователь
         user = await self.repository.get_user_by_id(user_id)
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
-
+            raise UserNotFoundError()
         # Удаляем пользователя
         await self.repository.delete(user_id)
         return {"message": "OK"}

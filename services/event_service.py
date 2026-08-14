@@ -1,7 +1,6 @@
 from datetime import datetime
 
-from fastapi import HTTPException, status
-
+from app.exceptions import EventAlreadyStartsError, EventNotFoundError
 from repositories.event_repository import EventRepository
 from schemas.events import EventCreate, EventUpdate
 
@@ -21,17 +20,13 @@ class EventService:
     async def get_event(self, event_id: int):
         event = await self.repository.get_event_by_id(event_id)
         if not event:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
-            )
+            raise EventNotFoundError()
         return event
 
     async def update_event(self, event_id: int, event_data: EventUpdate):
         event = await self.repository.get_event_by_id(event_id)
         if not event:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="event not found"
-            )
+            raise EventNotFoundError()
 
         updated_event = await self.repository.update(event_id, event_data)
         return updated_event
@@ -39,13 +34,10 @@ class EventService:
     async def delete_event(self, event_id: int):
         event = await self.repository.get_event_by_id(event_id)
         if not event:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="event not found"
-            )
+            raise EventNotFoundError()
 
-        if event.start_time <= datetime.utcnow():
-            pass
-            # TODO: raise EventAlreadyStarted()
+        if event.start_time <= datetime.utcnow():  # noqa: DTZ003
+            raise EventAlreadyStartsError()
 
         await self.repository.delete(event)
         # TODO: redis
