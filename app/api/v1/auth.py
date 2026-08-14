@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 
-from app.dependencies.user import get_user_service
+from app.dependencies.user import UserServiceDep
 from app.schemas.users import UserCreate, UserResponse
-from app.services.user_service import UserService
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 @router.post(
@@ -15,7 +14,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 )
 async def create_user(
     user_data: UserCreate,
-    service: UserService = Depends(get_user_service),  # noqa: B008
+    service: UserServiceDep,
 ):
     user = await service.create_user(user_data)
     return user

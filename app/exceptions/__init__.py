@@ -6,7 +6,7 @@ from app.exceptions.base import (
 )
 from app.exceptions.event import (
     EventAlreadyExistsError,
-    EventNotAvailableError,
+    EventAlreadyStartsError,
     EventNotFoundError,
 )
 from app.exceptions.user import (
@@ -18,7 +18,7 @@ __all__ = [
     "AppException",
     "ConflictError",
     "EventAlreadyExistsError",
-    "EventNotAvailableError",
+    "EventAlreadyStartsError",
     "EventNotFoundError",
     "NotFoundError",
     "PermissionDeniedError",

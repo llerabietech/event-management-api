@@ -1,5 +1,6 @@
 import uuid
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import bcrypt
 import jwt
@@ -74,3 +75,24 @@ def decode_token(token: str, expected_type: str) -> dict:
         raise credentials_exception
 
     return payload
+
+def verify_token(token: str) -> dict[str, Any] | None:
+    try:
+        # Декодируем токен с проверкой подписи и срока действия
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
+        )
+        return payload
+        
+    except jwt.ExpiredSignatureError:
+        # Токен истёк
+        return None
+        
+    except jwt.JWTError:
+        # Любая другая ошибка JWT:
+        # - Невалидная подпись
+        # - Невалидный формат
+        # - Невалидный алгоритм
+        return None
