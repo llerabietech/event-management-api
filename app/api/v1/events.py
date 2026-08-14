@@ -1,8 +1,7 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 
-from dependencies.event import get_event_service
+from dependencies.event import EventServiceDep
 from schemas.events import EventCreate, EventResponse, EventUpdate
-from services.event_service import EventService
 
 router = APIRouter(prefix="/events", tags=["Events"])
 
@@ -15,7 +14,7 @@ router = APIRouter(prefix="/events", tags=["Events"])
 )
 async def create_event(
     event_data: EventCreate,
-    service: EventService = Depends(get_event_service),  # noqa: B008
+    service: EventServiceDep,
 ):
     event = await service.create_event(event_data)
     return event
@@ -25,9 +24,9 @@ async def create_event(
     "/", response_model=list[EventResponse], summary="Получить список всех событий"
 )
 async def get_events(
+    service: EventServiceDep,
     skip: int = 0,
     limit: int = 100,
-    service: EventService = Depends(get_event_service),  # noqa: B008
 ):
     events = await service.get_events(skip=skip, limit=limit)
     return events
@@ -38,7 +37,7 @@ async def get_events(
 )
 async def get_event(
     event_id: int,
-    service: EventService = Depends(get_event_service),  # noqa: B008
+    service: EventServiceDep,
 ):
     event = await service.get_event(event_id)
     return event
@@ -48,7 +47,7 @@ async def get_event(
 async def update_event(
     event_id: int,
     event_data: EventUpdate,
-    service: EventService = Depends(get_event_service),  # noqa: B008
+    service: EventServiceDep,
 ):
     updated_event = await service.update_event(event_id, event_data)
     return updated_event
@@ -57,7 +56,7 @@ async def update_event(
 @router.delete("/{event_id}", summary="Удалить событие")
 async def delete_event(
     event_id: int,
-    service: EventService = Depends(get_event_service),  # noqa: B008
+    service: EventServiceDep,
 ):
     await service.delete_event(event_id=event_id)
     return {"message": "OK"}
