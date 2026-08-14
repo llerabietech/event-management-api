@@ -1,4 +1,4 @@
-from app.exceptions import ConflictError, NotFoundError
+from app.exceptions.base import ConflictError, NotFoundError
 
 
 class EventNotFoundError(NotFoundError):
