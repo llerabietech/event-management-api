@@ -25,7 +25,7 @@ class AuthService:
         self.refresh_token_repository = refresh_token_repository
 
     async def login(self, data: LoginRequest) -> TokenPair:
-        user = await self.user_repository.get_by_username(
+        user = await self.user_repository.get_by_email(
             data.username,
         )
 
@@ -35,7 +35,7 @@ class AuthService:
         password_ok = await run_in_threadpool(
             verify_password,
             data.password,
-            user.hashed_password,
+            user.password_hash,
         )
 
         if not password_ok:

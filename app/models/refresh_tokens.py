@@ -1,38 +1,48 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-import sqlalchemy.orm
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.models.users import User
 
 
 class RefreshToken(Base):
     __tablename__ = "refresh_tokens"
 
-    id: sqlalchemy.orm.Mapped[int] = sqlalchemy.orm.mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
-    user_id: sqlalchemy.orm.Mapped[int] = sqlalchemy.orm.mapped_column(
-        ForeignKey("users.id"),
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
 
-    jti: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(
+    jti: Mapped[str] = mapped_column(
         String(36),
         unique=True,
         nullable=False,
         index=True,
     )
 
-    expires_at: sqlalchemy.orm.Mapped[datetime] = sqlalchemy.orm.mapped_column(
-        nullable=False
-    )
-
-    revoked_at: sqlalchemy.orm.Mapped[datetime | None] = sqlalchemy.orm.mapped_column(
-        nullable=True
-    )
-
-    created_at: sqlalchemy.orm.Mapped[datetime] = sqlalchemy.orm.mapped_column(
-        default=datetime.utcnow,
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         nullable=False,
+    )
+
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    user: Mapped[User] = relationship(
+        back_populates="refresh_tokens",
     )

@@ -26,6 +26,12 @@ class UserService:
             raise UserNotFoundError(user_id)
         return user
 
+    async def get_user_by_email(self, user_email: str):
+        user = await self.repository.get_user_by_email(user_email)
+        if not user:
+            raise UserNotFoundError(user_email)
+        return user
+
     async def update_user(self, user_id: int, user_data: UserUpdate):
         # Проверяем, существует ли пользователь
         user = await self.repository.get_user_by_id(user_id)
