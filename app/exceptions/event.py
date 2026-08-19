@@ -23,3 +23,11 @@ class EventAlreadyStartsError(ConflictError):
     def __init__(self, event_id: int):
         self.event_id = event_id
         super().__init__(f"Event {event_id} already starts")
+
+
+class EventEndTimeError(ConflictError):
+    error_code = "EVENT_END_TIME_ERROR"
+
+    def __init__(self, event_id: int):
+        self.event_id = event_id
+        super().__init__("End_time must be after start_time")

@@ -1,6 +1,7 @@
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession 
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.exceptions import EventNotFoundError
 from app.models.events import Event
 from app.schemas.events import EventCreate, EventUpdate
 
@@ -13,13 +14,14 @@ class EventRepository:
         result = await self.db.execute(select(Event).offset(skip).limit(limit))
         return result.scalars().all()
 
-    async def create(self, event_data: EventCreate) -> Event:
+    async def create(self, event_data: EventCreate, owner_id: int) -> Event:
         event = Event(
             title=event_data.title,
             description=event_data.description,
             location=event_data.location,
             start_time=event_data.start_time,
             end_time=event_data.end_time,
+            owner_id=owner_id,
             capacity=event_data.capacity,
         )
         self.db.add(event)
@@ -34,7 +36,7 @@ class EventRepository:
     async def update(self, event_id: int, event_data: EventUpdate) -> Event:
         event = await self.get_event_by_id(event_id)
         if not event:
-            raise ValueError("event not found")
+            raise EventNotFoundError(event_id)
 
         update_data = event_data.model_dump(exclude_unset=True)
 
@@ -48,7 +50,7 @@ class EventRepository:
     async def delete(self, event_id: int) -> None:
         event = await self.get_event_by_id(event_id)
         if not event:
-            raise ValueError("event not found")
+            raise EventNotFoundError(event_id)
 
         await self.db.delete(event)
         await self.db.flush()

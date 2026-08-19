@@ -1,5 +1,6 @@
 from fastapi import APIRouter, status
 
+from app.dependencies.current_user import CurrentUserDep
 from app.dependencies.event import EventServiceDep
 from app.schemas.events import EventCreate, EventResponse, EventUpdate
 
@@ -15,8 +16,9 @@ router = APIRouter(prefix="/events", tags=["Events"])
 async def create_event(
     event_data: EventCreate,
     service: EventServiceDep,
+    current_user: CurrentUserDep,
 ):
-    event = await service.create_event(event_data)
+    event = await service.create_event(event_data, owner_id = current_user.id)
     return event
 
 

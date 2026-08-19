@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.security import decode_access_token
 from app.dependencies import get_user_repository
@@ -9,16 +9,21 @@ from app.exceptions.auth import AccessTokenInvalidError
 from app.models.users import User
 from app.repositories.user_repository import UserRepository
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+http_bearer = HTTPBearer()
 
 
 async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
-    user_repository: UserRepository = Depends(get_user_repository),  # noqa: B008,
+    credentials: Annotated[
+        HTTPAuthorizationCredentials,
+        Depends(http_bearer),
+    ],
+    user_repository: Annotated[
+        UserRepository,
+        Depends(get_user_repository),
+    ],
 ):
-    """
-    Извлекает пользователя из JWT access токена.
-    """
+    token = credentials.credentials
+
     payload = decode_access_token(token)
 
     user_id_str = payload.get("sub")
@@ -31,7 +36,7 @@ async def get_current_user(
     except ValueError:
         raise AccessTokenInvalidError()
 
-    user = await user_repository.get_by_id(user_id)
+    user = await user_repository.get_user_by_id(user_id)
 
     if user is None:
         raise AccessTokenInvalidError()

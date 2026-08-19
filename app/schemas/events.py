@@ -1,6 +1,8 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from app.exceptions import EventEndTimeError
 
 
 class EventBase(BaseModel):
@@ -26,7 +28,12 @@ class EventBase(BaseModel):
         gt=0,
         le=10000
     )
+@model_validator(mode="after")
+def validate_event_time(self):
+    if self.end_time <= self.start_time:
+        raise EventEndTimeError()
 
+    return self
 
 class EventCreate(EventBase):
     pass 

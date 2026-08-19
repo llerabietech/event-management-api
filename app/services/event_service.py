@@ -1,6 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
-from app.exceptions import EventAlreadyStartsError, EventNotFoundError
+from app.exceptions import (
+    EventAlreadyStartsError,
+    EventNotFoundError,
+)
 from app.repositories.event_repository import EventRepository
 from app.schemas.events import EventCreate, EventUpdate
 
@@ -13,8 +16,8 @@ class EventService:
         events = await self.repository.get_events(skip, limit)
         return events
 
-    async def create_event(self, event_data: EventCreate):
-        event = await self.repository.create(event_data)
+    async def create_event(self, event_data: EventCreate, owner_id: int):
+        event = await self.repository.create(event_data, owner_id)
         return event
 
     async def get_event(self, event_id: int):
@@ -36,9 +39,9 @@ class EventService:
         if not event:
             raise EventNotFoundError(event_id)
 
-        if event.start_time <= datetime.utcnow():  # noqa: DTZ003
+        if event.end_time >= datetime.now(timezone.utc):
             raise EventAlreadyStartsError(event_id)
 
-        await self.repository.delete(event)
+        await self.repository.delete(event_id)
         # TODO: redis
         return {"message": "OK"}

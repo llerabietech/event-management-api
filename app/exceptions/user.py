@@ -15,3 +15,11 @@ class UserAlreadyExistsError(ConflictError):
     def __init__(self, username: str):
         self.username = username
         super().__init__(f"User {username} already exists")
+
+
+class UserNotAuthorized(Exception):
+    error_code = "USER_NOT_AUTHORIZED"
+    status_code = 401
+
+    def __init__(self):
+        super().__init__("User is not authorized")
