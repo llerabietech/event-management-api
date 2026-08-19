@@ -1,4 +1,10 @@
-from app.exceptions import UserAlreadyExistsError, UserNotFoundError
+from app.core.permissions import can_update_user
+from app.exceptions import (
+    PermissionDeniedError,
+    UserAlreadyExistsError,
+    UserNotFoundError,
+)
+from app.models.users import User
 from app.repositories.user_repository import UserRepository
 from app.schemas.users import UserCreate, UserUpdate
 
@@ -32,7 +38,13 @@ class UserService:
             raise UserNotFoundError(user_email)
         return user
 
-    async def update_user(self, user_id: int, user_data: UserUpdate):
+    async def update_user(
+        self, user_id: int, user_data: UserUpdate, current_user: User
+    ):
+        if not can_update_user(user_id, current_user):
+            raise PermissionDeniedError(
+                "You can update only your profile",
+            )
         # Проверяем, существует ли пользователь
         user = await self.repository.get_user_by_id(user_id)
         if not user:

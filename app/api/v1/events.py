@@ -50,8 +50,9 @@ async def update_event(
     event_id: int,
     event_data: EventUpdate,
     service: EventServiceDep,
+    current_user: CurrentUserDep,
 ):
-    updated_event = await service.update_event(event_id, event_data)
+    updated_event = await service.update_event(event_id=event_id, event_data=event_data, current_user=current_user)
     return updated_event
 
 
@@ -59,6 +60,7 @@ async def update_event(
 async def delete_event(
     event_id: int,
     service: EventServiceDep,
+    current_user: CurrentUserDep,
 ):
-    await service.delete_event(event_id=event_id)
+    await service.delete_event(event_id=event_id, current_user=current_user)
     return {"message": "OK"}

@@ -1,9 +1,20 @@
 from fastapi import APIRouter
 
+from app.dependencies.current_user import (
+    CurrentAdminDep,
+    CurrentModeratorDep,
+    CurrentUserDep,
+)
 from app.dependencies.user import UserServiceDep
 from app.schemas.users import UserResponse, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["Users"])
+
+
+@router.get("/me", response_model=list[UserResponse], summary="Посмотреть свои данные")
+async def get_me(service: UserServiceDep, user: CurrentUserDep):
+    user = await service.get_user(user.id)
+    return user
 
 
 @router.get(
@@ -11,6 +22,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 )
 async def list_users(
     service: UserServiceDep,
+    admin: CurrentAdminDep,
     skip: int = 0,
     limit: int = 100,
 ):
@@ -22,8 +34,7 @@ async def list_users(
     "/{user_id}", response_model=UserResponse, summary="Получить пользователя по ID"
 )
 async def get_user(
-    user_id: int,
-    service: UserServiceDep,
+    user_id: int, service: UserServiceDep, moderator: CurrentModeratorDep
 ):
     user = await service.get_user(user_id)
     return user
@@ -36,12 +47,17 @@ async def update_user(
     user_id: int,
     user_data: UserUpdate,
     service: UserServiceDep,
+    current_user: CurrentUserDep,
 ):
-    updated_user = await service.update_user(user_id, user_data)
+    updated_user = await service.update_user(user_id, user_data, current_user)
     return updated_user
 
 
 @router.delete("/{user_id}", summary="Удалить пользователя")
-async def delete_event(user_id: int, service: UserServiceDep):
+async def delete_event(
+    user_id: int,
+    service: UserServiceDep,
+    admin: CurrentAdminDep,
+):
     await service.delete_user(user_id=user_id)
     return {"message": "OK"}

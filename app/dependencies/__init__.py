@@ -17,6 +17,7 @@ from app.dependencies.auth import (
 )
 from app.dependencies.current_user import (
     get_current_user,
+    require_role,
 )
 
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     # User
     "get_user_repository",
     "get_user_service",
+    "require_role",
 ]
