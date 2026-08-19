@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     APP_NAME: str = Field(default="Event Manager", description="Название приложения")
     APP_ENV: str = Field(default="development", description="Окружение: development/production")
     DEBUG: bool = Field(default=True, description="Режим отладки")
+    ADMIN_EMAIL: str = Field(description="Email админа")
+    ADMIN_PASSWORD: str = Field(description="Пароль админа")
     
     # === База данных ===
     DATABASE_URL: str = Field(

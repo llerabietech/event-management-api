@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.core.permissions import can_manage_event
 from app.exceptions import (
@@ -48,7 +48,7 @@ class EventService:
         if not event:
             raise EventNotFoundError(event_id)
 
-        if event.end_time >= datetime.now(timezone.utc):
+        if event.end_time >= datetime.now(UTC):
             raise EventAlreadyStartsError(event_id)
 
         if not can_manage_event(current_user, event):
