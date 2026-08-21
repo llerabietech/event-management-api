@@ -8,6 +8,7 @@ from app.api import router
 from app.core.bootstrap import create_initial_admin
 from app.core.config import settings
 from app.core.error_handlers import register_error_handlers
+from app.messaging.rabbitmq import RabbitClient
 from app.middleware import register_middleware
 
 logger = logging.getLogger(__name__)
@@ -31,11 +32,23 @@ async def lifespan(app: FastAPI):
         logger.error(f"Redis connection failed: {e}")
         app.state.redis = None
 
+    try:
+        app.state.rabbit = RabbitClient(settings.RABBITMQ_URL)
+        await app.state.rabbit.connect()
+        logger.info("RabbitMQ connected successfully")
+    except Exception as exc:
+        logger.exception("RabbitMQ connection failed: %s", exc)  # noqa: TRY401
+        app.state.rabbit = None
+
     yield
 
-    if app.state.redis is not None:
+    if getattr(app.state, "redis", None) is not None:
         await app.state.redis.aclose()
         logger.info("Redis disconnected")
+
+    if getattr(app.state, "rabbit", None) is not None:
+        await app.state.rabbit.close()
+        logger.info("RabbitMQ disconnected")
 
 
 app = FastAPI(

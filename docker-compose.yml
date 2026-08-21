@@ -14,6 +14,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - .:/app
       - app_venv:/app/.venv 
@@ -33,6 +35,22 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
+      timeout: 5s
+      retries: 5
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
       timeout: 5s
       retries: 5
   redis:
@@ -66,3 +84,4 @@ volumes:
   postgres_data:  
   app_venv:  
   redis_data:
+  rabbitmq_data:

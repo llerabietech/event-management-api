@@ -37,6 +37,11 @@ class Settings(BaseSettings):
     REDIS_URL: str = Field(
         default="redis://redis:6379/0", description="Строка подключения к Redis"
     )
+    
+      # === RabbitMq ===
+    RABBITMQ_URL: str = Field(
+        default="amqp://admin:admin_password@", description="Строка подключения к RabbitMq"
+    )
 
     # Настройки чтения .env файла
     model_config = SettingsConfigDict(

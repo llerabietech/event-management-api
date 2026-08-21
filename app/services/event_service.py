@@ -6,6 +6,7 @@ from app.exceptions import (
     EventNotFoundError,
 )
 from app.exceptions.base import PermissionDeniedError
+from app.messaging.rabbitmq import RabbitClient
 from app.models.users import User
 from app.repositories.event_repository import EventRepository
 from app.schemas.events import EventCreate, EventResponse, EventUpdate
@@ -17,9 +18,11 @@ class EventService:
         self,
         repository: EventRepository,
         cache: CacheService,
+        rabbit: RabbitClient,
     ):
         self.repository = repository
         self.cache = cache
+        self.rabbit = rabbit
 
     async def get_events(self, skip: int = 0, limit: int = 100):
         cache_key = "events:list"
@@ -43,6 +46,18 @@ class EventService:
 
     async def create_event(self, event_data: EventCreate, owner_id: int):
         event = await self.repository.create(event_data, owner_id)
+        await self.rabbit.publish(
+            routing_key="event.created",
+            payload={
+                "event_type": "event.created",
+                "occurred_at": datetime.now(UTC).isoformat(),
+                "data": {
+                    "event_id": event.id,
+                    "title": event.title,
+                    "owner_id": event.owner_id,
+                },
+            },
+        )
         await self.cache.delete("events:list")
         return event
 

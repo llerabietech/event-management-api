@@ -26,6 +26,9 @@ from app.dependencies.redis import (
 from app.dependencies.cache import (
     get_cache_service,
 )
+from app.dependencies.rabbitmq import (
+    get_rabbit,
+)
 
 __all__ = [
     "get_auth_service",
@@ -34,6 +37,7 @@ __all__ = [
     "get_db",
     "get_event_repository",
     "get_event_service",
+    "get_rabbit",
     "get_redis",
     "get_refresh_tokens_repository",
     "get_user_repository",

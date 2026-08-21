@@ -45,6 +45,8 @@ async def create_initial_admin() -> None:
             email=admin_email,
             password_hash=password_hash,
             role=UserRole.ADMIN,
+            first_name = "Админ",
+            last_name="Админ",
         )
 
         session.add(admin_user)
