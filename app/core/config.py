@@ -35,7 +35,7 @@ class Settings(BaseSettings):
 
     # === Redis ===
     REDIS_URL: str = Field(
-        default="redis://localhost:6379/0", description="Строка подключения к Redis"
+        default="redis://redis:6379/0", description="Строка подключения к Redis"
     )
 
     # Настройки чтения .env файла

@@ -4,7 +4,7 @@ from starlette.concurrency import run_in_threadpool
 
 from app.core.config import settings
 from app.core.security import hash_password
-from app.dependencies import get_db
+from app.db.session import async_session_factory
 from app.models.users import User, UserRole
 from app.repositories.user_repository import UserRepository
 
@@ -22,7 +22,7 @@ async def create_initial_admin() -> None:
         )
         return
 
-    async with get_db() as session:
+    async with async_session_factory() as session:
         user_repository = UserRepository(session)
 
         existing_user = await user_repository.get_user_by_email(
@@ -36,16 +36,15 @@ async def create_initial_admin() -> None:
             )
             return
 
-        hashed_password = await run_in_threadpool(
+        password_hash = await run_in_threadpool(
             hash_password,
             admin_password,
         )
 
         admin_user = User(
             email=admin_email,
-            hashed_password=hashed_password,
+            password_hash=password_hash,
             role=UserRole.ADMIN,
-            is_active=True,
         )
 
         session.add(admin_user)
