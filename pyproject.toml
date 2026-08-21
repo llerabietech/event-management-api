@@ -15,4 +15,5 @@ dependencies = [
     "bcrypt>=5.0.0",
     "pyjwt>=2.13.0",
     "python-multipart>=0.0.32",
+    "redis>=8.1.0",
 ]
