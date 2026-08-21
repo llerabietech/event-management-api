@@ -25,7 +25,7 @@ class AuthService:
         self.refresh_token_repository = refresh_token_repository
 
     async def login(self, data: LoginRequest) -> TokenPair:
-        user = await self.user_repository.get_by_email(
+        user = await self.user_repository.get_user_by_email(
             data.username,
         )
 
