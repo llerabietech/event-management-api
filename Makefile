@@ -33,7 +33,6 @@ help:
 	@echo ""
 	@echo "$(GREEN)Разработка:$(NC)"
 	@echo "  make worker      - Запустить только consumer"
-	@echo "  make test        - Запустить тесты"
 	@echo "  make shell       - Зайти в контейнер app"
 	@echo "  make env         - Показать переменные окружения"
 	@echo ""
@@ -107,16 +106,6 @@ revision:
 worker:
 	@echo "$(GREEN)Запуск worker...$(NC)"
 	docker compose up worker
-
-## Запустить тесты
-test:
-	@echo "$(BLUE)Запуск тестов...$(NC)"
-	docker compose exec app pytest tests/ -v
-
-## Запустить тесты с покрытием
-test-coverage:
-	@echo "$(BLUE)Запуск тестов с покрытием...$(NC)"
-	docker compose exec app pytest tests/ --cov=app --cov-report=term-missing
 
 ## Зайти в контейнер app
 shell:
