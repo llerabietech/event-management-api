@@ -1,3 +1,12 @@
+"""Сервис управления событиями.
+
+Реализует бизнес-логику работы с мероприятиями:
+- Получение списка событий с кэшированием
+- Создание события с публикацией в RabbitMQ
+- Получение одного события с кэшированием
+- Обновление и удаление событий с проверкой прав
+"""
+
 from datetime import UTC, datetime
 
 from app.core.permissions import can_manage_event
@@ -25,6 +34,16 @@ class EventService:
         self.rabbit = rabbit
 
     async def get_events(self, skip: int = 0, limit: int = 100):
+        """Возвращает список событий с поддержкой пагинации и кэширования.
+
+        Args:
+            skip: Количество событий, которые нужно пропустить
+            limit: Максимальное количество возвращаемых событий
+
+        Returns:
+            Список словарей с данными событий
+
+        """
         cache_key = "events:list"
 
         cached_events = await self.cache.get_json(cache_key)
@@ -45,6 +64,18 @@ class EventService:
         return events_data
 
     async def create_event(self, event_data: EventCreate, owner_id: int):
+        """Создаёт новое событие и публикует доменное событие в RabbitMQ.
+
+        Args:
+            event_data: Данные нового события из тела запроса
+                (название, описание, время, вместимость и т.д.).
+            owner_id: Идентификатор пользователя-организатора.
+                Берётся из токена аутентификации текущего пользователя.
+
+        Returns:
+            Созданная модель события с присвоенным ``id``.
+
+        """
         event = await self.repository.create(event_data, owner_id)
         await self.rabbit.publish(
             routing_key="event.created",
@@ -62,6 +93,14 @@ class EventService:
         return event
 
     async def get_event(self, event_id: int):
+        """Возвращает одно событие по идентификатору с кэшированием.
+
+        Args:
+            event_id: Идентификатор события
+
+        Returns:
+            Словарь с данными события
+        """
         cache_key = f"events:{event_id}"
 
         cached_event = await self.cache.get_json(cache_key)
@@ -85,6 +124,17 @@ class EventService:
     async def update_event(
         self, event_id: int, event_data: EventUpdate, current_user: User
     ):
+        """Обновляет событие с проверкой прав доступа.
+
+        Args:
+            event_id: Идентификатор обновляемого события
+            event_data: Поля для обновления
+            current_user: Текущий аутентифицированный пользователь,
+                передаётся из зависимости ``CurrentUserDep``.
+
+        Returns:
+            Обновлённая модель события
+        """
         event = await self.repository.get_event_by_id(event_id)
         if not event:
             raise EventNotFoundError(event_id)
@@ -98,6 +148,19 @@ class EventService:
         return updated_event
 
     async def delete_event(self, event_id: int, current_user: User):
+        """Удаляет событие с проверкой бизнес-правил и прав доступа
+
+        Args:
+            event_id: Идентификатор удаляемого события.
+            current_user: Текущий аутентифицированный пользователь,
+                передаётся из зависимости ``CurrentUserDep``.
+
+        Returns:
+            Сообщение об успешном удалении::
+
+                {"message": "OK"}
+
+        """
         event = await self.repository.get_event_by_id(event_id)
         if not event:
             raise EventNotFoundError(event_id)

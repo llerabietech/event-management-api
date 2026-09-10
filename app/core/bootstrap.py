@@ -12,6 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 async def create_initial_admin() -> None:
+    """ 
+        Создает администратора при запуске приложения
+    """
     admin_email = settings.ADMIN_EMAIL
     admin_password = settings.ADMIN_PASSWORD
 

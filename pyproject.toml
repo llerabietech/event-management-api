@@ -1,7 +1,7 @@
 [project]
 name = "event-management-api"
-version = "0.1.0"
-description = "Add your description here"
+version = "1.0.0"
+description = "Event management api"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
