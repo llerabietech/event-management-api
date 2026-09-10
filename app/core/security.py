@@ -1,3 +1,24 @@
+"""Модуль безопасности: хеширование паролей и JWT-токены.
+
+Реализует:
+- Хеширование паролей через bcrypt
+- Создание и валидацию JWT access-токенов (короткое время жизни)
+- Создание и валидацию JWT refresh-токенов (длительное время жизни)
+
+JWT payload содержит поля:
+- ``sub`` — идентификатор пользователя
+- ``type`` — тип токена ("access" или "refresh")
+- ``iat`` — время создания (issued at)
+- ``exp`` — время истечения (expiration)
+- ``jti`` — уникальный идентификатор токена (JWT ID)
+
+Конфигурация через переменные окружения:
+- ``JWT_SECRET_KEY`` — секретный ключ для подписи
+- ``ALGORITHM`` — алгоритм подписи (по умолчанию HS256)
+- ``ACCESS_TOKEN_EXPIRE_MINUTES`` — время жизни access-токена
+- ``REFRESH_TOKEN_EXPIRE_DAYS`` — время жизни refresh-токена
+"""
+
 import os
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -20,6 +41,13 @@ REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
 
 
 def hash_password(password: str) -> str:
+    """Хеширует пароль с помощью bcrypt.
+    Args:
+        password: Пароль в открытом виде.
+
+    Returns:
+        Хешированный пароль в формате bcrypt
+    """
     hashed = bcrypt.hashpw(
         password.encode("utf-8"),
         bcrypt.gensalt(rounds=12),
@@ -29,6 +57,16 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, hashed_password: str) -> bool:
+    """Проверяет соответствие пароля его хешу.
+
+    Args:
+        password: Пароль в открытом виде для проверки.
+        hashed_password: Сохранённый хеш bcrypt.
+
+    Returns:
+        True, если пароль соответствует хешу, иначе False.
+        Возвращает False также при невалидном формате хеша
+    """
     try:
         return bcrypt.checkpw(
             password.encode("utf-8"),
@@ -39,6 +77,14 @@ def verify_password(password: str, hashed_password: str) -> bool:
 
 
 def create_access_token(user_id: int) -> str:
+    """Создаёт access JWT-токен для авторизации пользователя.
+
+    Args:
+        user_id: Идентификатор пользователя
+
+    Returns:
+        Закодированная строка JWT-токена
+    """
     now = datetime.now(UTC)
     expires_at = now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
@@ -58,6 +104,17 @@ def create_access_token(user_id: int) -> str:
 
 
 def create_refresh_token(user_id: int) -> tuple[str, str, datetime]:
+    """Создаёт refresh JWT-токен для обновления access-токена.
+
+    Args:
+        user_id: Идентификатор пользователя
+
+    Returns:
+        Кортеж из трёх элементов:
+            - ``token`` — закодированная строка refresh JWT-токена
+            - ``jti`` — уникальный идентификатор токена (для сохранения в БД)
+            - ``expires_at`` — время истечения токена (datetime с timezone)
+    """
     now = datetime.now(UTC)
     expires_at = now + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
@@ -81,6 +138,15 @@ def create_refresh_token(user_id: int) -> tuple[str, str, datetime]:
 
 
 def _decode_token(token: str, expected_type: str) -> dict:
+    """Декодирует и валидирует JWT-токен
+
+    Args:
+        token: Закодированная строка JWT-токена.
+        expected_type: Ожидаемый тип токена — ``"access"`` или ``"refresh"``.
+
+    Returns:
+        Словарь с полями payload токена при успешной валидации.
+    """
     try:
         payload = jwt.decode(
             token,
@@ -109,8 +175,30 @@ def _decode_token(token: str, expected_type: str) -> dict:
 
 
 def decode_access_token(token: str) -> dict:
+    """Декодирует и валидирует access JWT-токен.
+
+    Публичная обёртка над ``_decode_token`` для access-токенов.
+    Проверяет подпись, срок действия и тип токена.
+
+    Args:
+        token: Закодированная строка access-токена.
+
+    Returns:
+        Словарь с полями payload
+    """
     return _decode_token(token, expected_type="access")
 
 
 def decode_refresh_token(token: str) -> dict:
+    """Декодирует и валидирует refresh JWT-токен.
+
+    Публичная обёртка над ``_decode_token`` для refresh-токенов.
+    Проверяет подпись, срок действия и тип токена.
+
+    Args:
+        token: Закодированная строка refresh-токена.
+
+    Returns:
+        Словарь с полями payload
+    """
     return _decode_token(token, expected_type="refresh")

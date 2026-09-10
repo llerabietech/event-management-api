@@ -93,13 +93,13 @@ env:
 ## Применить миграции БД
 migrate:
 	@echo "$(BLUE)Применение миграций...$(NC)"
-	docker compose exec app alembic upgrade head
+	docker compose exec app uv run alembic upgrade head
 	@echo "$(GREEN)Миграции применены$(NC)"
 
 ## Создать новую миграцию (использование: make revision msg="описание")
 revision:
 	@echo "$(BLUE)Создание миграции...$(NC)"
-	docker compose exec app alembic revision --autogenerate -m "$(msg)"
+	docker compose exec app uv run alembic revision --autogenerate -m "$(msg)"
 	@echo "$(GREEN)Миграция создана$(NC)"
 
 ## Запустить только consumer
